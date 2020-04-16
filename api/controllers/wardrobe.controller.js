@@ -1,4 +1,11 @@
 const Wardrobe = require('../models/wardrobe.model');
+const Garment = require('../models/garment.model');
+const User = require('../models/user.model');
+// const User = require('../models/user.model')
+
+
+// const validator = require('validator');
+
 
 // Dica: você pode usar req.user para acessar informações do usuário que está fazendo a request.
 
@@ -11,6 +18,60 @@ exports.getAll = async (req, res) => {
         // dos guarda-roupas estejam presentes.
 
         // Pesquise qual deve ser o código de retorno HTTP quando a requisição foi bem sucedida.
+        console.log('req.query');
+        console.log(req.query);
+
+        user = User(req.user);
+        console.log(user);
+
+        // // Criando um wardrobe:
+        // let w_owner = await User.findOne({username: 'schdck'})
+        // let w_garment = await Garment.findOne({model: "Camiseta Internacional 2019/20"})
+        // let wardrobe = await Wardrobe.create({
+        //     name: 'Verão',
+        //     description: 'Roupas de verão',
+        //     owner: w_owner,
+        //     garments: [w_garment],
+        //     image_url: 'https://www.casasbahia-imagens.com.br/Moveis/quartos/guardaroupa/13888083/1040289635/roupeiro-ana-6-portas-canela-panan-13888083.jpg'
+        // })
+
+        // wardrobe = await Wardrobe.create({
+        //     name: 'Inverno',
+        //     description: 'Roupas de inverno',
+        //     owner: w_owner,
+        //     garments: [w_garment],
+        //     image_url: 'https://www.casasbahia-imagens.com.br/Moveis/quartos/guardaroupa/13888083/1040289635/roupeiro-ana-6-portas-canela-panan-13888083.jpg'
+        // })
+
+        // wardrobe = await Wardrobe.create({
+        //     name: 'Primavera',
+        //     description: 'Roupas de Primavera',
+        //     owner: w_owner,
+        //     garments: [w_garment],
+        //     image_url: 'https://www.casasbahia-imagens.com.br/Moveis/quartos/guardaroupa/13888083/1040289635/roupeiro-ana-6-portas-canela-panan-13888083.jpg'
+        // })
+
+        // wardrobe = await Wardrobe.create({
+        //     name: 'Outono',
+        //     description: 'Roupas de Outono',
+        //     owner: w_owner,
+        //     garments: [w_garment],
+        //     image_url: 'https://www.casasbahia-imagens.com.br/Moveis/quartos/guardaroupa/13888083/1040289635/roupeiro-ana-6-portas-canela-panan-13888083.jpg'
+        // })
+    
+
+        // Consulta o banco: 
+
+        // TODO: ALTERAR PARA A ENTREGA //
+        let w_owner = await User.findOne({username: 'schdck'})
+
+        const wardrobe = await Wardrobe.find({owner: w_owner});
+
+        res.status(200).send({
+            // totalAmount: amountOfwardrobe,
+            // retrievedAmount: wardrobe.length,
+            data: wardrobe
+        });
     }
     catch(err) {
         console.error(err, err.message, err.stack);
@@ -30,6 +91,40 @@ exports.getById = async (req, res) => {
         // do guarda-roupas estejam presentes.
 
         // Pesquise qual deve ser o código de retorno HTTP quando a requisição foi bem sucedida.
+
+        const wardrobe_req = await Wardrobe.findById(req.params.wardrobeId);
+        if(wardrobe_req){
+            // TODO: ALTERAR PARA A ENTREGA //
+            let w_owner = await User.findOne({username: 'schdck'})
+
+            user = User(req.user);
+            console.log(user)
+            
+            const wardrobes = await Wardrobe.find({
+                owner: w_owner
+            });
+            found = false;
+            let found_element = Wardrobe();
+
+            for (each_wardrobe of wardrobes) {
+                console.log(each_wardrobe)
+
+                if(each_wardrobe._id == req.params.wardrobeId){
+                    found = true;
+                    found_element = each_wardrobe;
+                }
+            } 
+
+            if(found){
+                res.status(200).send(found_element);
+            } else{
+                return res.status(403).send({
+                message: "Wardroube (id=" + req.params.wardrobeId + ") not owned by user."});
+            }
+        }else{
+            return res.status(404).send({
+            message: "Wardroube (id=" + req.params.wardrobeId + ") not found."});
+        }
     }
     catch(err) {
         console.error(err, err.message, err.stack);
