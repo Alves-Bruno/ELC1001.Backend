@@ -6,5 +6,5 @@ module.exports = (app) => {
     app.post('/api/v1/user/login', user.login);
 
     // Auth required
-    app.get('/api/v1/user/me', user.getInfo);
+    app.get('/api/v1/user/me', auth, user.getInfo);
 }

@@ -4,6 +4,9 @@ exports.getAll = async (req, res) => {
     try {
         console.log(req.query);
 
+        console.log('User id: ')
+        console.log(req.user._id)
+
         const { skip = 0, limit = 20 } = req.query;
 
         if(limit > 50)
