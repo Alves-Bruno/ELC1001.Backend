@@ -18,31 +18,25 @@ exports.getAll = async (req, res) => {
         // dos guarda-roupas estejam presentes.
 
         // Pesquise qual deve ser o código de retorno HTTP quando a requisição foi bem sucedida.
+   
+        // Procura no DB os armários do user:
+        const wardrobe = await Wardrobe.find({owner: req.user});
+        console.log(wardrobe)
 
-        user = User(req.user);
-        console.log('user: '+ user.username + '\n_id: ' + user._id);
+        if(wardrobe.length){
+            // Retorna os armários
+            res.status(200).send({
+                message: 'Wardrobes were found.',
+                data: wardrobe
+            });
+        }else{
+            // User não possui armários
+            res.status(404).send({
+                message: 'User does not have wardrobes.',
+            });
+        }
 
-        let w_owner = await User.findById(user._id)
-        // Se o user existir e a senha estiver certa:
-        if(w_owner){
-            // Procura no DB os armários do user:
-            const wardrobe = await Wardrobe.find({owner: w_owner});
-            console.log(wardrobe)
-
-            if(wardrobe.length){
-                // Retorna os armários
-                res.status(200).send({
-                    message: 'Wardrobes were found.',
-                    data: wardrobe
-                });
-            }else{
-                // User não possui armários
-                res.status(404).send({
-                    message: 'User does not have wardrobes.',
-                });
-            }
-
-        } 
+        
     }
     catch(err) {
         console.error(err, err.message, err.stack);
@@ -63,14 +57,12 @@ exports.getById = async (req, res) => {
 
         // Pesquise qual deve ser o código de retorno HTTP quando a requisição foi bem sucedida.
 
-        user = User(req.user);
-
         const guarda_roupa = await Wardrobe.findById(req.params.wardrobeId)
         // console.log(exist)
 
         if(guarda_roupa){
     
-            if(!String(user._id).localeCompare(String(guarda_roupa.owner))){
+            if(!String(req.user._id).localeCompare(String(guarda_roupa.owner))){
                 // Retorna o armário
                 res.status(200).send({
                     message: 'Wardrobe found.',
@@ -111,24 +103,16 @@ exports.create = async (req, res) => {
         // Você pode escolher se quer retornar as informações do guarda-roupas criado.
         // Pesquise qual deve ser o código de retorno HTTP quando um novo recurso foi criado no banco.
         
-
-        const json_example = {
-            garments: [{_id:"aaaaaaaaaaaaaaaaaaaaaaaa"}, {_id:"bbbbbbbbbbbbbbbbbbbbbbbb"}],
-            name: 'Wardrobe name',
-            description: 'Description to the wardrobe.',
-            image_url: 'http://aaaa'
-        }
-
-        user = User(req.user);
-        let w_owner = await User.findById(user._id);
+        // user = User(req.user);
+        // let w_owner = await User.findById(user._id);
 
         // Testar JSON enviado
         const prop_list = ["garments", "name", "description", "image_url"]
         for (prop of prop_list) {
             if(!req.body.hasOwnProperty(prop)){
-                res.status(422).send({
+                res.status(400).send({
                     message: 'Invalid JSON format. See example at data field.',
-                    data: json_example
+                    data: []
                 });
                 return;
             }
@@ -154,7 +138,7 @@ exports.create = async (req, res) => {
             }else{
                 res.status(404).send({
                     message: 'Invalid JSON format. See example at data field.',
-                    data: json_example
+                    data: []
                 });
                 return;
             }
@@ -163,7 +147,7 @@ exports.create = async (req, res) => {
         // Cria um objeto da classe wardrobe com base no JSON enviado
         req.body.garments = lista_de_roupas;
         let wardrobe = new Wardrobe(req.body);
-        wardrobe.owner = w_owner;
+        wardrobe.owner = req.user;
 
         // Manda para o banco o que foi criado:
         let wardrobe_on_db = await Wardrobe.create(wardrobe);
@@ -192,7 +176,7 @@ exports.addGarment = async (req, res) => {
 
         // Pesquise qual deve ser o código de retorno HTTP quando a requisição foi bem sucedida.
 
-        user = User(req.user);
+        // user = User(req.user);
         // let w_owner = await User.findById(user._id);
 
         const guarda_roupa = await Wardrobe.findById(req.params.wardrobeId)
@@ -202,9 +186,9 @@ exports.addGarment = async (req, res) => {
     
             // Testa se o guarda roupa é do user
             console.log(guarda_roupa.owner)
-            console.log(user._id)
+            console.log(req.user._id)
             // console.log()
-            if(!String(user._id).localeCompare(String(guarda_roupa.owner))){
+            if(!String(req.user._id).localeCompare(String(guarda_roupa.owner))){
     
                 // Procura a roupa no BD
                 const roupa_nova = await Garment.findById(req.params.garmentId)
